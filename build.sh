@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-PACKAGE_NAME="arrera-branding"
-VERSION="1.0.0"
-TARBALL_NAME="${PACKAGE_NAME}-${VERSION}"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SPEC_FILE="$(find "${ROOT_DIR}" -maxdepth 1 -name "*.spec" | head -n 1)"
+PACKAGE_NAME="$(grep -E '^Name:' "${SPEC_FILE}" | awk '{print $2}')"
+VERSION="$(grep -E '^Version:' "${SPEC_FILE}" | awk '{print $2}')"
+TARBALL_NAME="${PACKAGE_NAME}-${VERSION}"
 BUILD_DIR="${ROOT_DIR}/build_rpm"
 OUTPUT_DIR="${ROOT_DIR}/output"
 
