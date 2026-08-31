@@ -1,5 +1,5 @@
 Name:           arrera-branding
-Version:        1.0.1
+Version:        1.1.2
 Release:        1%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
@@ -47,7 +47,11 @@ cp src/fastfetch/arrera-logo.txt %{buildroot}%{_sysconfdir}/fastfetch/arrera-log
 mkdir -p %{buildroot}%{_datadir}/plymouth/themes/arrera
 cp src/plymouth/* %{buildroot}%{_datadir}/plymouth/themes/arrera/
 
-# 5. Configuration de l'écran de connexion GDM
+# 5. Configuration de l'écran de connexion GDM & GSettings
+mkdir -p %{buildroot}%{_datadir}/glib-2.0/schemas
+cp src/gdm/99_arrera-branding.gschema.override %{buildroot}%{_datadir}/glib-2.0/schemas/99_arrera-branding.gschema.override
+mkdir -p %{buildroot}%{_sysconfdir}/dconf/profile
+cp src/gdm/profile-gdm %{buildroot}%{_sysconfdir}/dconf/profile/gdm
 mkdir -p %{buildroot}%{_sysconfdir}/dconf/db/gdm.d
 cp src/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 
@@ -60,6 +64,16 @@ if [ -f %{_datadir}/pixmaps/arrera-logo.png ]; then
             cp -f %{_datadir}/pixmaps/arrera-logo.svg %{_datadir}/pixmaps/${name}.svg 2>/dev/null || :
         fi
     done
+fi
+
+# Remplacement des bannières et logos GDM / Fedora
+if [ -f %{_datadir}/pixmaps/baniere_white.png ]; then
+    for gdm_name in fedora-gdm-logo system-logo-white fedora_whitelogo_med fedora-logo-small fedora_logo_med; do
+        cp -f %{_datadir}/pixmaps/baniere_white.png %{_datadir}/pixmaps/${gdm_name}.png 2>/dev/null || :
+    done
+fi
+if [ -f %{_datadir}/pixmaps/arrera-logo.svg ]; then
+    cp -f %{_datadir}/pixmaps/arrera-logo.svg %{_datadir}/pixmaps/fedora_whitelogo.svg 2>/dev/null || :
 fi
 
 # 2. Remplacement dynamique du branding Anaconda
@@ -88,12 +102,18 @@ if [ -x /usr/bin/gtk-update-icon-cache ]; then
     done
 fi
 
-# 5. Mise à jour de la configuration dconf (GDM)
-if [ -x /usr/bin/dconf ]; then
-    /usr/bin/dconf update &>/dev/null || :
+# 5. Compilation des schémas GSettings (GDM / GNOME)
+if [ -x /usr/bin/glib-compile-schemas ]; then
+    /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &>/dev/null || :
 fi
 
-# 6. Activation automatique du thème Plymouth Arrera
+# 6. Mise à jour de la configuration dconf (GDM)
+if [ -x /usr/bin/dconf ]; then
+    /usr/bin/dconf update &>/dev/null || :
+    chmod 644 %{_sysconfdir}/dconf/db/gdm 2>/dev/null || :
+fi
+
+# 7. Activation automatique du thème Plymouth Arrera
 if [ -x /usr/sbin/plymouth-set-default-theme ]; then
     /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
 fi
@@ -102,6 +122,9 @@ fi
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
     /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+fi
+if [ -x /usr/bin/glib-compile-schemas ]; then
+    /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &>/dev/null || :
 fi
 if [ -x /usr/bin/dconf ]; then
     /usr/bin/dconf update &>/dev/null || :
@@ -113,10 +136,19 @@ fi
 %{_datadir}/icons/hicolor/*/apps/arrera-logo.png
 %{_datadir}/icons/hicolor/scalable/apps/arrera-logo.svg
 %{_datadir}/plymouth/themes/arrera/*
+%{_datadir}/glib-2.0/schemas/99_arrera-branding.gschema.override
 %config(noreplace) %{_sysconfdir}/fastfetch/*
+%config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 
 %changelog
+* Mon Aug 31 2026 Arrera Software <contact@arrera.org> - 1.1.2-1
+- Update version to 1.1.2
+
+* Mon Aug 31 2026 Arrera Software <contact@arrera.org> - 1.0.2-2
+- Fix GDM branding with GSettings schema override, fedora-gdm-logo fallback and dconf update
+- Bump release to 2
+
 * Thu Aug 27 2026 Arrera Software <contact@arrera.org> - 1.0.1-1
 - Fix file conflicts with fedora-logos by dynamically overriding in post scriptlet
 - Add automated Plymouth theme activation
