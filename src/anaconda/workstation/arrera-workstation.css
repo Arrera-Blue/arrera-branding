@@ -1,0 +1,48 @@
+/* Arrera Linux Anaconda Branding - Workstation Edition */
+
+@define-color arrera #1a3c8a;
+@define-color arrera-light #0d5cad;
+
+/* Sidebar background with Arrera blue gradient */
+.logo-sidebar {
+    background-image: url('/usr/share/anaconda/pixmaps/workstation/sidebar-bg.png');
+    background-color: @arrera;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+/* Arrera "A" logo in the sidebar */
+.logo {
+    background-image: url('/usr/share/anaconda/pixmaps/workstation/sidebar-logo.png');
+    background-position: 50% 20px;
+    background-repeat: no-repeat;
+    background-color: transparent;
+}
+
+/* No extra product logo on top */
+.product-logo {
+    background-image: none;
+    background-color: transparent;
+}
+
+/* Top navigation bar */
+AnacondaSpokeWindow #nav-box {
+    background-color: @arrera;
+    background-image: url('/usr/share/anaconda/pixmaps/workstation/topbar-bg.png');
+    background-repeat: no-repeat;
+    color: white;
+}
+
+/* Remove ugly shadow from nav buttons */
+AnacondaSpokeWindow #nav-box GtkButton {
+    box-shadow: none;
+}
+
+/* Sidebar color override */
+.logo-sidebar {
+    background-color: @arrera;
+}
+
+AnacondaSpokeWindow #nav-box {
+    background-color: @arrera;
+}
