@@ -1,9 +1,8 @@
-/* Arrera Linux Anaconda Branding - Workstation Edition */
+/* Arrera Linux - Branding Anaconda Installer */
 
 @define-color arrera #1a3c8a;
-@define-color arrera-light #0d5cad;
 
-/* Sidebar background with Arrera blue gradient */
+/* Sidebar background - fond bleu Arrera avec filigrane */
 .logo-sidebar {
     background-image: url('/usr/share/anaconda/pixmaps/workstation/sidebar-bg.png');
     background-color: @arrera;
@@ -11,21 +10,23 @@
     background-size: cover;
 }
 
-/* Arrera "A" logo in the sidebar */
+/* Logo "A" Arrera en bas du sidebar */
 .logo {
     background-image: url('/usr/share/anaconda/pixmaps/workstation/sidebar-logo.png');
-    background-position: 50% 20px;
+    background-position: 50% 90%;
     background-repeat: no-repeat;
     background-color: transparent;
 }
 
-/* No extra product logo on top */
+/* Logo "A Arrera Blue" en haut du sidebar (product-logo) */
 .product-logo {
-    background-image: none;
+    background-image: url('/usr/share/anaconda/pixmaps/workstation/sidebar-logo_flavor.png');
+    background-position: 12px 10.5em;
+    background-repeat: no-repeat;
     background-color: transparent;
 }
 
-/* Top navigation bar */
+/* Barre de navigation du haut */
 AnacondaSpokeWindow #nav-box {
     background-color: @arrera;
     background-image: url('/usr/share/anaconda/pixmaps/workstation/topbar-bg.png');
@@ -33,12 +34,12 @@ AnacondaSpokeWindow #nav-box {
     color: white;
 }
 
-/* Remove ugly shadow from nav buttons */
+/* Supprimer l'ombre sur les boutons */
 AnacondaSpokeWindow #nav-box GtkButton {
     box-shadow: none;
 }
 
-/* Sidebar color override */
+/* Couleurs sidebar */
 .logo-sidebar {
     background-color: @arrera;
 }

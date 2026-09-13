@@ -1,5 +1,5 @@
 Name:           arrera-branding
-Version:        1.1.5
+Version:        1.1.7
 Release:        1%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
@@ -58,10 +58,7 @@ cp src/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-l
 
 # 6. Assets Anaconda Arrera - stockés dans /usr/share/arrera/anaconda/ (évite conflit avec le paquet anaconda)
 mkdir -p %{buildroot}%{_datadir}/arrera/anaconda/workstation
-cp src/anaconda/workstation/sidebar-logo.png %{buildroot}%{_datadir}/arrera/anaconda/workstation/sidebar-logo.png
-cp src/anaconda/workstation/sidebar-bg.png %{buildroot}%{_datadir}/arrera/anaconda/workstation/sidebar-bg.png
-cp src/anaconda/workstation/topbar-bg.png %{buildroot}%{_datadir}/arrera/anaconda/workstation/topbar-bg.png
-cp src/anaconda/workstation/arrera-workstation.css %{buildroot}%{_datadir}/arrera/anaconda/workstation/arrera-workstation.css
+cp src/anaconda/workstation/* %{buildroot}%{_datadir}/arrera/anaconda/workstation/
 
 %post
 # 1. Remplacement des bannières Thème CLAIR (Logo Bleu) pour GNOME / Paramètres "À propos"
@@ -91,6 +88,7 @@ fi
 # 4. Branding Anaconda Arrera - copie depuis /usr/share/arrera/anaconda/ (pas de conflit RPM)
 if [ -d %{_datadir}/arrera/anaconda/workstation ] && [ -d %{_datadir}/anaconda/pixmaps/workstation ]; then
     cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-logo.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-logo.png 2>/dev/null || :
+    cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-logo_flavor.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-logo_flavor.png 2>/dev/null || :
     cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-bg.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-bg.png 2>/dev/null || :
     cp -f %{_datadir}/arrera/anaconda/workstation/topbar-bg.png %{_datadir}/anaconda/pixmaps/workstation/topbar-bg.png 2>/dev/null || :
     # Remplacer le CSS Fedora par le CSS Arrera
@@ -99,6 +97,16 @@ fi
 # Bannière header pour l'installateur
 if [ -f %{_datadir}/pixmaps/baniere_blue.png ] && [ -d %{_datadir}/anaconda/pixmaps ]; then
     cp -f %{_datadir}/pixmaps/baniere_blue.png %{_datadir}/anaconda/pixmaps/anaconda_header.png 2>/dev/null || :
+fi
+
+# 4bis. Remplacement des icônes d'application Anaconda / Installateur (menu, dock, bureau)
+if [ -f %{_datadir}/pixmaps/anaconda.png ]; then
+    mkdir -p %{_datadir}/icons/hicolor/256x256/apps
+    cp -f %{_datadir}/pixmaps/anaconda.png %{_datadir}/icons/hicolor/256x256/apps/anaconda.png 2>/dev/null || :
+    find %{_datadir}/icons -type f \( -iname "*anaconda*.png" -o -iname "*AnacondaInstaller*.png" \) -exec cp -f %{_datadir}/pixmaps/anaconda.png {} \; 2>/dev/null || :
+fi
+if [ -f %{_datadir}/pixmaps/anaconda.svg ]; then
+    find %{_datadir}/icons -type f \( -iname "*anaconda*.svg" -o -iname "*AnacondaInstaller*.svg" \) -exec cp -f %{_datadir}/pixmaps/anaconda.svg {} \; 2>/dev/null || :
 fi
 
 # 5. Remplacement des icônes SVG/PNG dans tous les thèmes
@@ -170,13 +178,23 @@ fi
 %config(noreplace) %{_sysconfdir}/fastfetch/*
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
-%{_datadir}/arrera/anaconda/workstation/sidebar-logo.png
-%{_datadir}/arrera/anaconda/workstation/sidebar-bg.png
-%{_datadir}/arrera/anaconda/workstation/topbar-bg.png
-%{_datadir}/arrera/anaconda/workstation/arrera-workstation.css
+%{_datadir}/arrera/anaconda/workstation/*
 
 %changelog
-* Sat Sep 06 2026 Arrera Software <contact@arrera.org> - 1.1.4-1
+* Sat Sep 12 2026 Arrera Software <contact@arrera.org> - 1.1.7-1
+- Add Arrera Anaconda installer application icon (anaconda.png and anaconda.svg)
+- Overwrite default anaconda / AnacondaInstaller desktop icons in hicolor and system themes
+- Fix Anaconda sidebar and branding assets
+
+* Sat Sep 12 2026 Arrera Software <contact@arrera.org> - 1.1.6-1
+- Update version to 1.1.6
+
+* Sat Sep 12 2026 Arrera Software <contact@arrera.org> - 1.1.5-1
+- Add sidebar-logo_flavor.png (Arrera Blue banner) displayed at top of Anaconda sidebar
+- Update Anaconda CSS to use product-logo with correct positioning
+- Fix sidebar-logo (small A icon) positioned at bottom of sidebar
+
+* Sun Sep 06 2026 Arrera Software <contact@arrera.org> - 1.1.4-1
 - Add Arrera Blue branding for Anaconda installer (sidebar logo, background, CSS)
 - Replace fedora-workstation.css with Arrera blue theme in Anaconda
 - Fix: store Anaconda assets in /usr/share/arrera/anaconda/ to avoid RPM file conflict with anaconda package
