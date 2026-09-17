@@ -3,7 +3,7 @@ Version:        1.1.7
 Release:        1%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
-URL:            https://arrera.org/
+URL:            https://github.com/Arrera-Blue/arrera-branding
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
