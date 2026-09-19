@@ -1,6 +1,6 @@
 Name:           arrera-branding
 Version:        2026.beta.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
 URL:            https://github.com/Arrera-Blue/arrera-branding
@@ -11,6 +11,7 @@ Requires:       hicolor-icon-theme
 Requires:       fastfetch
 Requires:       plymouth-plugin-script
 Requires:       dconf
+Requires:       systemd
 
 %description
 Visual assets, logos, and branding configurations for Arrera Linux.
@@ -55,12 +56,40 @@ cp src/gdm/profile-gdm %{buildroot}%{_sysconfdir}/dconf/profile/gdm
 mkdir -p %{buildroot}%{_sysconfdir}/dconf/db/gdm.d
 cp src/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 
-
 # 6. Assets Anaconda Arrera - stockés dans /usr/share/arrera/anaconda/ (évite conflit avec le paquet anaconda)
 mkdir -p %{buildroot}%{_datadir}/arrera/anaconda/workstation
 cp src/anaconda/workstation/* %{buildroot}%{_datadir}/arrera/anaconda/workstation/
 
+# 7. Profils Anaconda Arrera (/etc/anaconda/profile.d/)
+mkdir -p %{buildroot}%{_sysconfdir}/anaconda/profile.d
+cp src/anaconda/profile.d/* %{buildroot}%{_sysconfdir}/anaconda/profile.d/
+
+# 8. Hook de titre GRUB / Kernel (/etc/kernel/install.d/)
+mkdir -p %{buildroot}%{_sysconfdir}/kernel/install.d
+install -m 755 src/scripts/99-arrera-title.install %{buildroot}%{_sysconfdir}/kernel/install.d/99-arrera-title.install
+
+# 9. Scripts système Arrera (/usr/libexec/)
+mkdir -p %{buildroot}%{_libexecdir}
+install -m 755 src/scripts/arrera-branding-guard.sh %{buildroot}%{_libexecdir}/arrera-branding-guard.sh
+install -m 755 src/scripts/arrera-post-install-cleanup.sh %{buildroot}%{_libexecdir}/arrera-post-install-cleanup.sh
+
+# 10. Services systemd Arrera
+mkdir -p %{buildroot}%{_unitdir}
+install -m 644 src/systemd/arrera-branding-guard.service %{buildroot}%{_unitdir}/arrera-branding-guard.service
+install -m 644 src/systemd/arrera-post-install-cleanup.service %{buildroot}%{_unitdir}/arrera-post-install-cleanup.service
+
+# 11. Sauvegardes de référence de l'identité système (/usr/share/arrera-branding/)
+mkdir -p %{buildroot}%{_datadir}/arrera-branding
+cp src/release/* %{buildroot}%{_datadir}/arrera-branding/
+
 %post
+# 0. Services systemd Arrera
+if [ -x /usr/bin/systemctl ]; then
+    /usr/bin/systemctl daemon-reload &>/dev/null || :
+    /usr/bin/systemctl enable arrera-branding-guard.service &>/dev/null || :
+    /usr/bin/systemctl enable arrera-post-install-cleanup.service &>/dev/null || :
+fi
+
 # 1. Remplacement des bannières Thème CLAIR (Logo Bleu) pour GNOME / Paramètres "À propos"
 if [ -f %{_datadir}/pixmaps/baniere_blue.png ]; then
     for light_name in fedora-logo-text fedora-logo fedora_logo fedora_logo_med system-logo-icon fedora-logo-icon fedora-logo-small anaconda_header; do
@@ -143,17 +172,31 @@ if [ -x /usr/sbin/plymouth-set-default-theme ]; then
     /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
 fi
 
-# 10. Forcer l'identité Arrera Blue-dev 2026 dans os-release
-if [ -f /usr/lib/os-release ]; then
-    sed -i 's/^NAME=.*/NAME="Arrera"/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="Arrera Blue-dev 2026"/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^VERSION=.*/VERSION="Blue-dev 2026"/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^VERSION_ID=.*/VERSION_ID="2026"/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^VERSION_CODENAME=.*/VERSION_CODENAME="Blue-dev"/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^ID=.*/ID=arrera/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^ID_LIKE=.*/ID_LIKE=fedora/' /usr/lib/os-release 2>/dev/null || :
-    sed -i 's/^LOGO=.*/LOGO="fedora-logo-text"/' /usr/lib/os-release 2>/dev/null || :
-    cp -f /usr/lib/os-release /etc/os-release 2>/dev/null || :
+# 10. Initialiser l'identité Arrera et les liens de compatibilité
+if [ -f %{_datadir}/arrera-branding/os-release ]; then
+    cp -f %{_datadir}/arrera-branding/os-release /usr/lib/os-release 2>/dev/null || :
+    cp -f %{_datadir}/arrera-branding/os-release /etc/os-release 2>/dev/null || :
+fi
+if [ -f %{_datadir}/arrera-branding/arrera-release ]; then
+    cp -f %{_datadir}/arrera-branding/arrera-release /etc/arrera-release 2>/dev/null || :
+    for release_file in fedora-release system-release redhat-release; do
+        rm -f "/etc/$release_file" 2>/dev/null || :
+        ln -sf /etc/arrera-release "/etc/$release_file" 2>/dev/null || :
+    done
+fi
+
+# Configuration GRUB distributor si présent
+if [ -f /etc/default/grub ]; then
+    sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Arrera Blue-dev 2026"/' /etc/default/grub 2>/dev/null || :
+fi
+
+# Corriger immédiatement les entrées BLS existantes
+if [ -d /boot/loader/entries ]; then
+    for conf in /boot/loader/entries/*.conf; do
+        [ -f "$conf" ] || continue
+        sed -i 's/^title Fedora Linux/title Arrera Blue-dev 2026/g' "$conf" 2>/dev/null || :
+        sed -i 's/^title Fedora/title Arrera Blue-dev 2026/g' "$conf" 2>/dev/null || :
+    done
 fi
 
 %postun
@@ -179,8 +222,22 @@ fi
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 %{_datadir}/arrera/anaconda/workstation/*
+%config(noreplace) %{_sysconfdir}/anaconda/profile.d/*
+%{_sysconfdir}/kernel/install.d/99-arrera-title.install
+%{_libexecdir}/arrera-branding-guard.sh
+%{_libexecdir}/arrera-post-install-cleanup.sh
+%{_unitdir}/arrera-branding-guard.service
+%{_unitdir}/arrera-post-install-cleanup.service
+%{_datadir}/arrera-branding/*
 
 %changelog
+* Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-2
+- Add Anaconda installer profiles (arrera.conf and arrera-workstation.conf)
+- Add kernel-install BLS title hook (99-arrera-title.install)
+- Add arrera-branding-guard systemd service and script
+- Add arrera-post-install-cleanup systemd service and script
+- Add master release files in /usr/share/arrera-branding/
+
 * Sat Sep 12 2026 Arrera Software <contact@arrera.org> - 1.1.7-1
 - Add Arrera Anaconda installer application icon (anaconda.png and anaconda.svg)
 - Overwrite default anaconda / AnacondaInstaller desktop icons in hicolor and system themes

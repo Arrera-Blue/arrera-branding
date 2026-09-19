@@ -1,0 +1,10 @@
+#!/bin/bash
+COMMAND="$1"
+if [ "$COMMAND" = "add" ] || [ -d "/boot/loader/entries" ]; then
+    for conf in /boot/loader/entries/*.conf; do
+        [ -f "$conf" ] || continue
+        sed -i 's/^title Fedora Linux/title Arrera Blue-dev 2026/g' "$conf"
+        sed -i 's/^title Fedora/title Arrera Blue-dev 2026/g' "$conf"
+    done
+fi
+exit 0

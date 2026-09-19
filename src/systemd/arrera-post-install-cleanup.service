@@ -1,0 +1,15 @@
+[Unit]
+Description=Arrera Linux Post-Install Cleanup
+DefaultDependencies=no
+After=local-fs.target
+Before=gdm.service display-manager.service
+ConditionKernelCommandLine=!rd.live.image
+ConditionPathExists=!/run/initramfs/live
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/arrera-post-install-cleanup.sh
+
+[Install]
+WantedBy=multi-user.target graphical.target

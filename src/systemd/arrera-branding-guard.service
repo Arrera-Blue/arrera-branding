@@ -1,0 +1,13 @@
+[Unit]
+Description=Arrera Linux Branding Guard
+DefaultDependencies=no
+After=local-fs.target
+Before=gdm.service display-manager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/libexec/arrera-branding-guard.sh
+
+[Install]
+WantedBy=multi-user.target graphical.target
