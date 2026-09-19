@@ -1,5 +1,5 @@
 Name:           arrera-branding
-Version:        1.1.7
+Version:        2026.beta.1
 Release:        1%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
