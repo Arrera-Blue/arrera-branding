@@ -1,6 +1,6 @@
 Name:           arrera-branding
 Version:        2026.beta.1
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
 URL:            https://github.com/Arrera-Blue/arrera-branding
@@ -235,6 +235,9 @@ fi
 %{_datadir}/arrera-branding/*
 
 %changelog
+* Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-4
+- Fix fastfetch logo indentation and adjust padding
+
 * Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-3
 - Add systemd-rpm-macros BuildRequires and fallback definition for _unitdir
 
