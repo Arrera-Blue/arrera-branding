@@ -1,11 +1,15 @@
 Name:           arrera-branding
 Version:        2026.beta.1
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
 URL:            https://github.com/Arrera-Blue/arrera-branding
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
+
+%{!?_unitdir: %global _unitdir %{_prefix}/lib/systemd/system}
+
+BuildRequires:  systemd-rpm-macros
 
 Requires:       hicolor-icon-theme
 Requires:       fastfetch
@@ -231,6 +235,9 @@ fi
 %{_datadir}/arrera-branding/*
 
 %changelog
+* Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-3
+- Add systemd-rpm-macros BuildRequires and fallback definition for _unitdir
+
 * Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-2
 - Add Anaconda installer profiles (arrera.conf and arrera-workstation.conf)
 - Add kernel-install BLS title hook (99-arrera-title.install)
