@@ -26,17 +26,20 @@ arrera-branding/
 │   │   └── arrera-branding-guard.sh      # Garde d'identité système après 'dnf upgrade'
 │   └── systemd/
 │       └── arrera-branding-guard.service
-├── editions/                          # 🎯 Identités propres à chaque édition
+├── editions/                          # 🎯 Identités et assets propres à chaque édition
 │   ├── home/
 │   │   ├── os-release
-│   │   └── arrera-release
+│   │   ├── arrera-release
+│   │   └── background-logo/           # Images pour l'extension GNOME background-logo (logo.png, logo-dark.png)
 │   ├── education/
 │   │   ├── os-release
-│   │   └── arrera-release
+│   │   ├── arrera-release
+│   │   └── background-logo/           # Images pour l'extension GNOME background-logo
 │   ├── enterprise/
 │   │   ├── os-release
-│   │   └── arrera-release
-│   └── server/                        # (Pas de Plymouth au packaging)
+│   │   ├── arrera-release
+│   │   └── background-logo/           # Images pour l'extension GNOME background-logo
+│   └── server/                        # (Mode texte natif, pas de Plymouth ni de background-logo)
 │       ├── os-release
 │       └── arrera-release
 ├── rpm/                               # Spécifications RPM par édition

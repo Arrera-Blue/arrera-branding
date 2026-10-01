@@ -5,19 +5,23 @@
 %global edition_name Éducation
 %global edition_variant Education Edition
 %global has_plymouth 1
+%global has_background_logo 1
 %elif "%{edition}" == "enterprise"
 %global edition_name Entreprise
 %global edition_variant Enterprise Edition
 %global has_plymouth 1
+%global has_background_logo 1
 %elif "%{edition}" == "server"
 %global edition_name Serveur
 %global edition_variant Server Edition
 %global has_plymouth 0
+%global has_background_logo 0
 %else
 %global edition home
 %global edition_name Home
 %global edition_variant Home Edition
 %global has_plymouth 1
+%global has_background_logo 1
 %endif
 
 Name:           arrera-branding-%{edition}
@@ -114,7 +118,19 @@ install -m 644 common/systemd/arrera-branding-guard.service %{buildroot}%{_unitd
 
 # 9. Fichiers maîtres de l'identité système de cette édition (/usr/share/arrera-branding/)
 mkdir -p %{buildroot}%{_datadir}/arrera-branding
-cp editions/%{edition}/* %{buildroot}%{_datadir}/arrera-branding/
+cp editions/%{edition}/os-release %{buildroot}%{_datadir}/arrera-branding/
+cp editions/%{edition}/arrera-release %{buildroot}%{_datadir}/arrera-branding/
+
+# 10. Background Logo pour l'extension GNOME (Home, Éducation, Entreprise)
+%if %{has_background_logo}
+mkdir -p %{buildroot}%{_datadir}/backgrounds/arrera
+if [ -d editions/%{edition}/background-logo ]; then
+    cp -a editions/%{edition}/background-logo/* %{buildroot}%{_datadir}/backgrounds/arrera/ 2>/dev/null || :
+    mkdir -p %{buildroot}%{_datadir}/pixmaps
+    cp -a editions/%{edition}/background-logo/logo.png %{buildroot}%{_datadir}/pixmaps/background-logo.png 2>/dev/null || :
+    cp -a editions/%{edition}/background-logo/logo-dark.png %{buildroot}%{_datadir}/pixmaps/background-logo-dark.png 2>/dev/null || :
+fi
+%endif
 
 %post
 # 0. Services systemd Arrera
@@ -240,6 +256,11 @@ fi
 %{_datadir}/arrera-branding/*
 %if %{has_plymouth}
 %{_datadir}/plymouth/themes/arrera/*
+%endif
+%if %{has_background_logo}
+%{_datadir}/backgrounds/arrera/*
+%{_datadir}/pixmaps/background-logo.png
+%{_datadir}/pixmaps/background-logo-dark.png
 %endif
 
 %changelog
