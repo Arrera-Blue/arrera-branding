@@ -132,6 +132,12 @@ if [ -d editions/%{edition}/background-logo ]; then
 fi
 %endif
 
+# 11. Logo GDM propre à cette édition
+if [ -f editions/%{edition}/gdm-logo.png ]; then
+    mkdir -p %{buildroot}%{_datadir}/pixmaps
+    cp -f editions/%{edition}/gdm-logo.png %{buildroot}%{_datadir}/pixmaps/arrera-gdm-logo.png
+fi
+
 %post
 # 0. Services systemd Arrera
 if [ -x /usr/bin/systemctl ]; then
@@ -148,12 +154,17 @@ fi
 
 # 2. Remplacement des bannières Thème SOMBRE (Logo Blanc) pour GDM et GNOME Dark
 if [ -f %{_datadir}/pixmaps/baniere_white.png ]; then
-    for dark_name in arrera-logo-text-dark fedora-logo-text-dark system-logo-white fedora_whitelogo_med fedora-gdm-logo; do
+    for dark_name in arrera-logo-text-dark fedora-logo-text-dark system-logo-white fedora_whitelogo_med; do
         cp -f %{_datadir}/pixmaps/baniere_white.png %{_datadir}/pixmaps/${dark_name}.png 2>/dev/null || :
     done
 fi
 
-# 3. Remplacement des logos ronds/carrés dans pixmaps
+# 3. Logo GDM propre à cette édition (remplace fedora-gdm-logo et garantit arrera-gdm-logo)
+if [ -f %{_datadir}/pixmaps/arrera-gdm-logo.png ]; then
+    cp -f %{_datadir}/pixmaps/arrera-gdm-logo.png %{_datadir}/pixmaps/fedora-gdm-logo.png 2>/dev/null || :
+fi
+
+# 4. Remplacement des logos ronds/carrés dans pixmaps
 if [ -f %{_datadir}/pixmaps/arrera-logo.png ]; then
     cp -f %{_datadir}/pixmaps/arrera-logo.png %{_datadir}/pixmaps/system-logo-icon.png 2>/dev/null || :
     cp -f %{_datadir}/pixmaps/arrera-logo.png %{_datadir}/pixmaps/fedora-logo-icon.png 2>/dev/null || :
@@ -163,7 +174,7 @@ if [ -f %{_datadir}/pixmaps/arrera-logo.svg ]; then
     cp -f %{_datadir}/pixmaps/arrera-logo.svg %{_datadir}/pixmaps/fedora-logo.svg 2>/dev/null || :
 fi
 
-# 4. Remplacement des icônes SVG/PNG dans tous les thèmes
+# 5. Remplacement des icônes SVG/PNG dans tous les thèmes
 if [ -f %{_datadir}/pixmaps/arrera-logo.svg ]; then
     find %{_datadir}/icons -type f \( -iname "*fedora*logo*.svg" -o -iname "*fedora*text*.svg" \) -exec cp -f %{_datadir}/pixmaps/arrera-logo.svg {} \; 2>/dev/null || :
 fi
@@ -171,7 +182,7 @@ if [ -f %{_datadir}/pixmaps/arrera-logo.png ]; then
     find %{_datadir}/icons -type f \( -iname "*fedora*logo*.png" -o -iname "*fedora*text*.png" \) -exec cp -f %{_datadir}/pixmaps/arrera-logo.png {} \; 2>/dev/null || :
 fi
 
-# 5. Rafraîchissement des caches d'icônes
+# 6. Rafraîchissement des caches d'icônes
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
     for theme_dir in %{_datadir}/icons/*; do
@@ -181,18 +192,18 @@ if [ -x /usr/bin/gtk-update-icon-cache ]; then
     done
 fi
 
-# 6. Compilation des schémas GSettings (GDM / GNOME)
+# 7. Compilation des schémas GSettings (GDM / GNOME)
 if [ -x /usr/bin/glib-compile-schemas ]; then
     /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &>/dev/null || :
 fi
 
-# 7. Mise à jour de la configuration dconf (GDM)
+# 8. Mise à jour de la configuration dconf (GDM)
 if [ -x /usr/bin/dconf ]; then
     /usr/bin/dconf update &>/dev/null || :
     chmod 644 %{_sysconfdir}/dconf/db/gdm 2>/dev/null || :
 fi
 
-# 8. Initialisation de l'identité Arrera pour cette édition
+# 9. Initialisation de l'identité Arrera pour cette édition
 if [ -f %{_datadir}/arrera-branding/os-release ]; then
     cp -f %{_datadir}/arrera-branding/os-release /usr/lib/os-release 2>/dev/null || :
     cp -f %{_datadir}/arrera-branding/os-release /etc/os-release 2>/dev/null || :
@@ -218,7 +229,7 @@ if [ -d /boot/loader/entries ]; then
     done
 fi
 
-# 9. Activation ou réinitialisation de Plymouth
+# 10. Activation ou réinitialisation de Plymouth
 %if %{has_plymouth}
 if [ -x /usr/sbin/plymouth-set-default-theme ]; then
     /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
@@ -259,8 +270,6 @@ fi
 %endif
 %if %{has_background_logo}
 %{_datadir}/backgrounds/arrera/*
-%{_datadir}/pixmaps/background-logo.png
-%{_datadir}/pixmaps/background-logo-dark.png
 %endif
 
 %changelog

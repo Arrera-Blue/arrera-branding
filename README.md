@@ -30,16 +30,19 @@ arrera-branding/
 │   ├── home/
 │   │   ├── os-release
 │   │   ├── arrera-release
+│   │   ├── gdm-logo.png               # Logo personnalisé pour l'écran de connexion GDM
 │   │   └── background-logo/           # Images pour l'extension GNOME background-logo (logo.png, logo-dark.png)
 │   ├── education/
 │   │   ├── os-release
 │   │   ├── arrera-release
+│   │   ├── gdm-logo.png               # Logo GDM spécifique (bannière verte)
 │   │   └── background-logo/           # Images pour l'extension GNOME background-logo
 │   ├── enterprise/
 │   │   ├── os-release
 │   │   ├── arrera-release
+│   │   ├── gdm-logo.png               # Logo GDM spécifique (bannière turquoise)
 │   │   └── background-logo/           # Images pour l'extension GNOME background-logo
-│   └── server/                        # (Mode texte natif, pas de Plymouth ni de background-logo)
+│   └── server/                        # (Mode texte natif, pas de Plymouth, pas de GDM, pas de background-logo)
 │       ├── os-release
 │       └── arrera-release
 ├── rpm/                               # Spécifications RPM par édition
