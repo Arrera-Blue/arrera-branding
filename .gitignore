@@ -2,3 +2,4 @@ build_rpm/
 output/
 *.tar.gz
 *.rpm
+.DS_Store

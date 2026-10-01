@@ -1,6 +1,6 @@
 # Arrera Branding
 
-Paquet RPM `arrera-branding` fournissant l'identité visuelle et les logos pour la distribution **Arrera Linux** (GNOME, GDM, Anaconda, Fastfetch).
+Paquet RPM `arrera-branding` fournissant l'identité visuelle et les logos pour la distribution **Arrera Linux** (GNOME, GDM, Plymouth, Fastfetch, OS-Release).
 
 ## Structure du projet
 
@@ -21,8 +21,18 @@ arrera-branding/
 │   │   ├── logo.png
 │   │   ├── progress_bar.png
 │   │   └── progress_bg.png
-│   └── gdm/
-│       └── 99-arrera-login
+│   ├── gdm/
+│   │   ├── 99-arrera-login
+│   │   ├── 99_arrera-branding.gschema.override
+│   │   └── profile-gdm
+│   ├── release/
+│   │   ├── os-release
+│   │   └── arrera-release
+│   ├── scripts/
+│   │   ├── 99-arrera-title.install
+│   │   └── arrera-branding-guard.sh
+│   └── systemd/
+│       └── arrera-branding-guard.service
 ├── arrera-branding.spec
 ├── build.sh
 ├── LICENSE

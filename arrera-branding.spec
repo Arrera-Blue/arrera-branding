@@ -1,6 +1,6 @@
 Name:           arrera-branding
 Version:        2026.beta.1
-Release:        4%{?dist}
+Release:        5%{?dist}
 Summary:        Visual assets and branding for Arrera Linux
 License:        CC-BY-SA-4.0
 URL:            https://github.com/Arrera-Blue/arrera-branding
@@ -19,7 +19,7 @@ Requires:       systemd
 
 %description
 Visual assets, logos, and branding configurations for Arrera Linux.
-Replaces default upstream branding across GNOME, Anaconda, and GDM.
+Replaces default upstream branding across GNOME and GDM.
 
 %prep
 %autosetup
@@ -60,29 +60,19 @@ cp src/gdm/profile-gdm %{buildroot}%{_sysconfdir}/dconf/profile/gdm
 mkdir -p %{buildroot}%{_sysconfdir}/dconf/db/gdm.d
 cp src/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 
-# 6. Assets Anaconda Arrera - stockés dans /usr/share/arrera/anaconda/ (évite conflit avec le paquet anaconda)
-mkdir -p %{buildroot}%{_datadir}/arrera/anaconda/workstation
-cp src/anaconda/workstation/* %{buildroot}%{_datadir}/arrera/anaconda/workstation/
-
-# 7. Profils Anaconda Arrera (/etc/anaconda/profile.d/)
-mkdir -p %{buildroot}%{_sysconfdir}/anaconda/profile.d
-cp src/anaconda/profile.d/* %{buildroot}%{_sysconfdir}/anaconda/profile.d/
-
-# 8. Hook de titre GRUB / Kernel (/etc/kernel/install.d/)
+# 6. Hook de titre GRUB / Kernel (/etc/kernel/install.d/)
 mkdir -p %{buildroot}%{_sysconfdir}/kernel/install.d
 install -m 755 src/scripts/99-arrera-title.install %{buildroot}%{_sysconfdir}/kernel/install.d/99-arrera-title.install
 
-# 9. Scripts système Arrera (/usr/libexec/)
+# 7. Scripts système Arrera (/usr/libexec/)
 mkdir -p %{buildroot}%{_libexecdir}
 install -m 755 src/scripts/arrera-branding-guard.sh %{buildroot}%{_libexecdir}/arrera-branding-guard.sh
-install -m 755 src/scripts/arrera-post-install-cleanup.sh %{buildroot}%{_libexecdir}/arrera-post-install-cleanup.sh
 
-# 10. Services systemd Arrera
+# 8. Services systemd Arrera
 mkdir -p %{buildroot}%{_unitdir}
 install -m 644 src/systemd/arrera-branding-guard.service %{buildroot}%{_unitdir}/arrera-branding-guard.service
-install -m 644 src/systemd/arrera-post-install-cleanup.service %{buildroot}%{_unitdir}/arrera-post-install-cleanup.service
 
-# 11. Sauvegardes de référence de l'identité système (/usr/share/arrera-branding/)
+# 9. Sauvegardes de référence de l'identité système (/usr/share/arrera-branding/)
 mkdir -p %{buildroot}%{_datadir}/arrera-branding
 cp src/release/* %{buildroot}%{_datadir}/arrera-branding/
 
@@ -91,12 +81,11 @@ cp src/release/* %{buildroot}%{_datadir}/arrera-branding/
 if [ -x /usr/bin/systemctl ]; then
     /usr/bin/systemctl daemon-reload &>/dev/null || :
     /usr/bin/systemctl enable arrera-branding-guard.service &>/dev/null || :
-    /usr/bin/systemctl enable arrera-post-install-cleanup.service &>/dev/null || :
 fi
 
 # 1. Remplacement des bannières Thème CLAIR (Logo Bleu) pour GNOME / Paramètres "À propos"
 if [ -f %{_datadir}/pixmaps/baniere_blue.png ]; then
-    for light_name in fedora-logo-text fedora-logo fedora_logo fedora_logo_med system-logo-icon fedora-logo-icon fedora-logo-small anaconda_header; do
+    for light_name in fedora-logo-text fedora-logo fedora_logo fedora_logo_med system-logo-icon fedora-logo-icon fedora-logo-small; do
         cp -f %{_datadir}/pixmaps/baniere_blue.png %{_datadir}/pixmaps/${light_name}.png 2>/dev/null || :
     done
 fi
@@ -118,31 +107,7 @@ if [ -f %{_datadir}/pixmaps/arrera-logo.svg ]; then
     cp -f %{_datadir}/pixmaps/arrera-logo.svg %{_datadir}/pixmaps/fedora-logo.svg 2>/dev/null || :
 fi
 
-# 4. Branding Anaconda Arrera - copie depuis /usr/share/arrera/anaconda/ (pas de conflit RPM)
-if [ -d %{_datadir}/arrera/anaconda/workstation ] && [ -d %{_datadir}/anaconda/pixmaps/workstation ]; then
-    cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-logo.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-logo.png 2>/dev/null || :
-    cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-logo_flavor.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-logo_flavor.png 2>/dev/null || :
-    cp -f %{_datadir}/arrera/anaconda/workstation/sidebar-bg.png %{_datadir}/anaconda/pixmaps/workstation/sidebar-bg.png 2>/dev/null || :
-    cp -f %{_datadir}/arrera/anaconda/workstation/topbar-bg.png %{_datadir}/anaconda/pixmaps/workstation/topbar-bg.png 2>/dev/null || :
-    # Remplacer le CSS Fedora par le CSS Arrera
-    cp -f %{_datadir}/arrera/anaconda/workstation/arrera-workstation.css %{_datadir}/anaconda/pixmaps/workstation/fedora-workstation.css 2>/dev/null || :
-fi
-# Bannière header pour l'installateur
-if [ -f %{_datadir}/pixmaps/baniere_blue.png ] && [ -d %{_datadir}/anaconda/pixmaps ]; then
-    cp -f %{_datadir}/pixmaps/baniere_blue.png %{_datadir}/anaconda/pixmaps/anaconda_header.png 2>/dev/null || :
-fi
-
-# 4bis. Remplacement des icônes d'application Anaconda / Installateur (menu, dock, bureau)
-if [ -f %{_datadir}/pixmaps/anaconda.png ]; then
-    mkdir -p %{_datadir}/icons/hicolor/256x256/apps
-    cp -f %{_datadir}/pixmaps/anaconda.png %{_datadir}/icons/hicolor/256x256/apps/anaconda.png 2>/dev/null || :
-    find %{_datadir}/icons -type f \( -iname "*anaconda*.png" -o -iname "*AnacondaInstaller*.png" \) -exec cp -f %{_datadir}/pixmaps/anaconda.png {} \; 2>/dev/null || :
-fi
-if [ -f %{_datadir}/pixmaps/anaconda.svg ]; then
-    find %{_datadir}/icons -type f \( -iname "*anaconda*.svg" -o -iname "*AnacondaInstaller*.svg" \) -exec cp -f %{_datadir}/pixmaps/anaconda.svg {} \; 2>/dev/null || :
-fi
-
-# 5. Remplacement des icônes SVG/PNG dans tous les thèmes
+# 4. Remplacement des icônes SVG/PNG dans tous les thèmes
 if [ -f %{_datadir}/pixmaps/arrera-logo.svg ]; then
     find %{_datadir}/icons -type f \( -iname "*fedora*logo*.svg" -o -iname "*fedora*text*.svg" \) -exec cp -f %{_datadir}/pixmaps/arrera-logo.svg {} \; 2>/dev/null || :
 fi
@@ -150,7 +115,7 @@ if [ -f %{_datadir}/pixmaps/arrera-logo.png ]; then
     find %{_datadir}/icons -type f \( -iname "*fedora*logo*.png" -o -iname "*fedora*text*.png" \) -exec cp -f %{_datadir}/pixmaps/arrera-logo.png {} \; 2>/dev/null || :
 fi
 
-# 6. Rafraîchissement des caches d'icônes
+# 5. Rafraîchissement des caches d'icônes
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
 if [ -x /usr/bin/gtk-update-icon-cache ]; then
     for theme_dir in %{_datadir}/icons/*; do
@@ -160,23 +125,23 @@ if [ -x /usr/bin/gtk-update-icon-cache ]; then
     done
 fi
 
-# 7. Compilation des schémas GSettings (GDM / GNOME)
+# 6. Compilation des schémas GSettings (GDM / GNOME)
 if [ -x /usr/bin/glib-compile-schemas ]; then
     /usr/bin/glib-compile-schemas %{_datadir}/glib-2.0/schemas &>/dev/null || :
 fi
 
-# 8. Mise à jour de la configuration dconf (GDM)
+# 7. Mise à jour de la configuration dconf (GDM)
 if [ -x /usr/bin/dconf ]; then
     /usr/bin/dconf update &>/dev/null || :
     chmod 644 %{_sysconfdir}/dconf/db/gdm 2>/dev/null || :
 fi
 
-# 9. Activation automatique du thème Plymouth Arrera
+# 8. Activation automatique du thème Plymouth Arrera
 if [ -x /usr/sbin/plymouth-set-default-theme ]; then
     /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
 fi
 
-# 10. Initialiser l'identité Arrera et les liens de compatibilité
+# 9. Initialiser l'identité Arrera et les liens de compatibilité
 if [ -f %{_datadir}/arrera-branding/os-release ]; then
     cp -f %{_datadir}/arrera-branding/os-release /usr/lib/os-release 2>/dev/null || :
     cp -f %{_datadir}/arrera-branding/os-release /etc/os-release 2>/dev/null || :
@@ -225,16 +190,15 @@ fi
 %config(noreplace) %{_sysconfdir}/fastfetch/*
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
 %config(noreplace) %{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
-%{_datadir}/arrera/anaconda/workstation/*
-%config(noreplace) %{_sysconfdir}/anaconda/profile.d/*
 %{_sysconfdir}/kernel/install.d/99-arrera-title.install
 %{_libexecdir}/arrera-branding-guard.sh
-%{_libexecdir}/arrera-post-install-cleanup.sh
 %{_unitdir}/arrera-branding-guard.service
-%{_unitdir}/arrera-post-install-cleanup.service
 %{_datadir}/arrera-branding/*
 
 %changelog
+* Thu Oct 01 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-5
+- Remove obsolete Anaconda installer assets, profiles and icon overrides (Calamares is now used)
+- Remove obsolete arrera-post-install-cleanup script and service (cleanup handled by Calamares / kickstart)
 * Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-4
 - Fix fastfetch logo indentation and adjust padding
 
