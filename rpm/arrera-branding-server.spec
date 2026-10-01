@@ -1,10 +1,32 @@
-Name:           arrera-branding
+%global edition server
+
+# Configuration dynamique par édition
+%if "%{edition}" == "education"
+%global edition_name Éducation
+%global edition_variant Education Edition
+%global has_plymouth 1
+%elif "%{edition}" == "enterprise"
+%global edition_name Entreprise
+%global edition_variant Enterprise Edition
+%global has_plymouth 1
+%elif "%{edition}" == "server"
+%global edition_name Serveur
+%global edition_variant Server Edition
+%global has_plymouth 0
+%else
+%global edition home
+%global edition_name Home
+%global edition_variant Home Edition
+%global has_plymouth 1
+%endif
+
+Name:           arrera-branding-%{edition}
 Version:        2026.beta.1
-Release:        5%{?dist}
-Summary:        Visual assets and branding for Arrera Linux
+Release:        6%{?dist}
+Summary:        Visual assets and branding for Arrera Linux (%{edition_name} Edition)
 License:        CC-BY-SA-4.0
 URL:            https://github.com/Arrera-Blue/arrera-branding
-Source0:        %{name}-%{version}.tar.gz
+Source0:        arrera-branding-%{version}.tar.gz
 BuildArch:      noarch
 
 %{!?_unitdir: %global _unitdir %{_prefix}/lib/systemd/system}
@@ -13,16 +35,32 @@ BuildRequires:  systemd-rpm-macros
 
 Requires:       hicolor-icon-theme
 Requires:       fastfetch
-Requires:       plymouth-plugin-script
 Requires:       dconf
 Requires:       systemd
+%if %{has_plymouth}
+Requires:       plymouth-plugin-script
+%endif
+
+Provides:       arrera-branding = %{version}-%{release}
+Provides:       arrera-branding-edition = %{version}-%{release}
+
+# Conflits mutuels entre éditions
+%if "%{edition}" == "home"
+Conflicts:      arrera-branding-education arrera-branding-enterprise arrera-branding-server
+%elif "%{edition}" == "education"
+Conflicts:      arrera-branding-home arrera-branding-enterprise arrera-branding-server
+%elif "%{edition}" == "enterprise"
+Conflicts:      arrera-branding-home arrera-branding-education arrera-branding-server
+%elif "%{edition}" == "server"
+Conflicts:      arrera-branding-home arrera-branding-education arrera-branding-enterprise
+%endif
 
 %description
-Visual assets, logos, and branding configurations for Arrera Linux.
-Replaces default upstream branding across GNOME and GDM.
+Visual assets, logos, and system branding for Arrera Linux %{edition_name} Edition across GNOME and GDM.
+This autonomous RPM package includes all common Arrera branding assets and edition-specific identity configurations.
 
 %prep
-%autosetup
+%autosetup -n arrera-branding-%{version}
 
 %build
 # Aucune compilation binaire requise (assets statiques)
@@ -32,49 +70,51 @@ rm -rf %{buildroot}
 
 # 1. Pixmaps Arrera
 mkdir -p %{buildroot}%{_datadir}/pixmaps
-cp -a src/pixmaps/* %{buildroot}%{_datadir}/pixmaps/
+cp -a common/pixmaps/* %{buildroot}%{_datadir}/pixmaps/
 
 # 2. Icônes hicolor Arrera
 for size in 16x16 22x22 24x24 32x32 48x48 64x64 96x96 128x128 256x256 512x512; do
     mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${size}/apps
-    cp src/pixmaps/arrera-logo.png %{buildroot}%{_datadir}/icons/hicolor/${size}/apps/arrera-logo.png
+    cp common/pixmaps/arrera-logo.png %{buildroot}%{_datadir}/icons/hicolor/${size}/apps/arrera-logo.png
 done
 
 mkdir -p %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
-cp src/pixmaps/arrera-logo.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/arrera-logo.svg
+cp common/pixmaps/arrera-logo.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/arrera-logo.svg
 
 # 3. Fastfetch
 mkdir -p %{buildroot}%{_sysconfdir}/fastfetch
-cp src/fastfetch/config.jsonc %{buildroot}%{_sysconfdir}/fastfetch/config.jsonc
-cp src/fastfetch/arrera-logo.txt %{buildroot}%{_sysconfdir}/fastfetch/arrera-logo.txt
+cp common/fastfetch/config.jsonc %{buildroot}%{_sysconfdir}/fastfetch/config.jsonc
+cp common/fastfetch/arrera-logo.txt %{buildroot}%{_sysconfdir}/fastfetch/arrera-logo.txt
 
-# 4. Thème Plymouth
+# 4. Thème Plymouth Arrera (inclus uniquement pour Home, Éducation et Entreprise)
+%if %{has_plymouth}
 mkdir -p %{buildroot}%{_datadir}/plymouth/themes/arrera
-cp src/plymouth/* %{buildroot}%{_datadir}/plymouth/themes/arrera/
+cp common/plymouth/* %{buildroot}%{_datadir}/plymouth/themes/arrera/
+%endif
 
 # 5. Configuration de l'écran de connexion GDM & GSettings
 mkdir -p %{buildroot}%{_datadir}/glib-2.0/schemas
-cp src/gdm/99_arrera-branding.gschema.override %{buildroot}%{_datadir}/glib-2.0/schemas/99_arrera-branding.gschema.override
+cp common/gdm/99_arrera-branding.gschema.override %{buildroot}%{_datadir}/glib-2.0/schemas/99_arrera-branding.gschema.override
 mkdir -p %{buildroot}%{_sysconfdir}/dconf/profile
-cp src/gdm/profile-gdm %{buildroot}%{_sysconfdir}/dconf/profile/gdm
+cp common/gdm/profile-gdm %{buildroot}%{_sysconfdir}/dconf/profile/gdm
 mkdir -p %{buildroot}%{_sysconfdir}/dconf/db/gdm.d
-cp src/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
+cp common/gdm/99-arrera-login %{buildroot}%{_sysconfdir}/dconf/db/gdm.d/99-arrera-login
 
 # 6. Hook de titre GRUB / Kernel (/etc/kernel/install.d/)
 mkdir -p %{buildroot}%{_sysconfdir}/kernel/install.d
-install -m 755 src/scripts/99-arrera-title.install %{buildroot}%{_sysconfdir}/kernel/install.d/99-arrera-title.install
+install -m 755 common/scripts/99-arrera-title.install %{buildroot}%{_sysconfdir}/kernel/install.d/99-arrera-title.install
 
 # 7. Scripts système Arrera (/usr/libexec/)
 mkdir -p %{buildroot}%{_libexecdir}
-install -m 755 src/scripts/arrera-branding-guard.sh %{buildroot}%{_libexecdir}/arrera-branding-guard.sh
+install -m 755 common/scripts/arrera-branding-guard.sh %{buildroot}%{_libexecdir}/arrera-branding-guard.sh
 
 # 8. Services systemd Arrera
 mkdir -p %{buildroot}%{_unitdir}
-install -m 644 src/systemd/arrera-branding-guard.service %{buildroot}%{_unitdir}/arrera-branding-guard.service
+install -m 644 common/systemd/arrera-branding-guard.service %{buildroot}%{_unitdir}/arrera-branding-guard.service
 
-# 9. Sauvegardes de référence de l'identité système (/usr/share/arrera-branding/)
+# 9. Fichiers maîtres de l'identité système de cette édition (/usr/share/arrera-branding/)
 mkdir -p %{buildroot}%{_datadir}/arrera-branding
-cp src/release/* %{buildroot}%{_datadir}/arrera-branding/
+cp editions/%{edition}/* %{buildroot}%{_datadir}/arrera-branding/
 
 %post
 # 0. Services systemd Arrera
@@ -136,12 +176,7 @@ if [ -x /usr/bin/dconf ]; then
     chmod 644 %{_sysconfdir}/dconf/db/gdm 2>/dev/null || :
 fi
 
-# 8. Activation automatique du thème Plymouth Arrera
-if [ -x /usr/sbin/plymouth-set-default-theme ]; then
-    /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
-fi
-
-# 9. Initialiser l'identité Arrera et les liens de compatibilité
+# 8. Initialisation de l'identité Arrera pour cette édition
 if [ -f %{_datadir}/arrera-branding/os-release ]; then
     cp -f %{_datadir}/arrera-branding/os-release /usr/lib/os-release 2>/dev/null || :
     cp -f %{_datadir}/arrera-branding/os-release /etc/os-release 2>/dev/null || :
@@ -154,19 +189,29 @@ if [ -f %{_datadir}/arrera-branding/arrera-release ]; then
     done
 fi
 
-# Configuration GRUB distributor si présent
+# Configuration GRUB distributor
 if [ -f /etc/default/grub ]; then
-    sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Arrera Blue-dev 2026"/' /etc/default/grub 2>/dev/null || :
+    sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR="Arrera Blue 2026 (%{edition_name})"/' /etc/default/grub 2>/dev/null || :
 fi
 
-# Corriger immédiatement les entrées BLS existantes
+# Correction immédiate des entrées BLS existantes
 if [ -d /boot/loader/entries ]; then
     for conf in /boot/loader/entries/*.conf; do
         [ -f "$conf" ] || continue
-        sed -i 's/^title Fedora Linux/title Arrera Blue-dev 2026/g' "$conf" 2>/dev/null || :
-        sed -i 's/^title Fedora/title Arrera Blue-dev 2026/g' "$conf" 2>/dev/null || :
+        sed -i 's/^title Fedora.*/title Arrera Blue-dev 2026 (%{edition_name})/g' "$conf" 2>/dev/null || :
     done
 fi
+
+# 9. Activation ou réinitialisation de Plymouth
+%if %{has_plymouth}
+if [ -x /usr/sbin/plymouth-set-default-theme ]; then
+    /usr/sbin/plymouth-set-default-theme -R arrera &>/dev/null || :
+fi
+%else
+if [ -x /usr/sbin/plymouth-set-default-theme ]; then
+    /usr/sbin/plymouth-set-default-theme --reset 2>/dev/null || /usr/sbin/plymouth-set-default-theme -R details 2>/dev/null || :
+fi
+%endif
 
 %postun
 /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
@@ -185,7 +230,6 @@ fi
 %{_datadir}/pixmaps/*
 %{_datadir}/icons/hicolor/*/apps/arrera-logo.png
 %{_datadir}/icons/hicolor/scalable/apps/arrera-logo.svg
-%{_datadir}/plymouth/themes/arrera/*
 %{_datadir}/glib-2.0/schemas/99_arrera-branding.gschema.override
 %config(noreplace) %{_sysconfdir}/fastfetch/*
 %config(noreplace) %{_sysconfdir}/dconf/profile/gdm
@@ -194,11 +238,24 @@ fi
 %{_libexecdir}/arrera-branding-guard.sh
 %{_unitdir}/arrera-branding-guard.service
 %{_datadir}/arrera-branding/*
+%if %{has_plymouth}
+%{_datadir}/plymouth/themes/arrera/*
+%endif
 
 %changelog
+* Thu Oct 01 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-6
+- Build autonomous RPM packages per edition:
+  * arrera-branding-home.rpm: Home edition with Plymouth
+  * arrera-branding-education.rpm: Education edition with Plymouth
+  * arrera-branding-enterprise.rpm: Enterprise edition with Plymouth
+  * arrera-branding-server.rpm: Server edition without Plymouth (text boot)
+- Share common visual assets (pixmaps, fastfetch, gdm, scripts, systemd) with zero duplication
+- Make 99-arrera-title.install and arrera-branding-guard dynamically read PRETTY_NAME
+
 * Thu Oct 01 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-5
 - Remove obsolete Anaconda installer assets, profiles and icon overrides (Calamares is now used)
 - Remove obsolete arrera-post-install-cleanup script and service (cleanup handled by Calamares / kickstart)
+
 * Sat Sep 19 2026 Arrera Software <contact@arrera.org> - 2026.beta.1-4
 - Fix fastfetch logo indentation and adjust padding
 

@@ -1,0 +1,20 @@
+#!/bin/bash
+COMMAND="$1"
+
+TITLE="Arrera Blue-dev 2026"
+if [ -f /usr/share/arrera-branding/os-release ]; then
+    PRETTY=$(grep -E '^PRETTY_NAME=' /usr/share/arrera-branding/os-release | cut -d= -f2 | tr -d '"')
+    [ -n "$PRETTY" ] && TITLE="$PRETTY"
+elif [ -f /etc/os-release ]; then
+    PRETTY=$(grep -E '^PRETTY_NAME=' /etc/os-release | cut -d= -f2 | tr -d '"')
+    [ -n "$PRETTY" ] && TITLE="$PRETTY"
+fi
+
+if [ "$COMMAND" = "add" ] || [ -d "/boot/loader/entries" ]; then
+    for conf in /boot/loader/entries/*.conf; do
+        [ -f "$conf" ] || continue
+        sed -i "s/^title Fedora Linux/title ${TITLE}/g" "$conf"
+        sed -i "s/^title Fedora/title ${TITLE}/g" "$conf"
+    done
+fi
+exit 0

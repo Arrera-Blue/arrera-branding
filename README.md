@@ -1,50 +1,99 @@
-# Arrera Branding
+# Arrera Branding (`arrera-branding`)
 
-Paquet RPM `arrera-branding` fournissant l'identité visuelle et les logos pour la distribution **Arrera Linux** (GNOME, GDM, Plymouth, Fastfetch, OS-Release).
+Paquets RPM fournissant l'identité visuelle, les logos et la personnalisation système pour les 4 éditions de la distribution **Arrera Linux** :
+- 🏠 **Home** : Identité poste de travail familiale avec thème Plymouth Arrera
+- 🎓 **Éducation** : Identité scolaire/éducative avec thème Plymouth Arrera
+- 🏢 **Entreprise** : Identité professionnelle/corporate avec thème Plymouth Arrera
+- 🖥️ **Serveur** : Identité serveur en mode texte natif (**sans Plymouth**)
 
-## Structure du projet
+Chaque édition produit un **paquet RPM autonome et indépendant** (`arrera-branding-home.rpm`, `arrera-branding-education.rpm`, etc.) qui fournit `arrera-branding` et est mutuellement exclusif (`Conflicts`) avec les autres éditions.
 
-```
+---
+
+## 📁 Structure du projet
+
+Pour éviter toute duplication de code, les composants sont scindés entre une base commune (`common/`) et les identités spécifiques (`editions/`) :
+
+```text
 arrera-branding/
-├── src/
-│   ├── pixmaps/
-│   │   ├── arrera-logo.png
-│   │   ├── arrera-logo.svg
-│   │   ├── logo.png
-│   │   └── baniere_*.png (black, blue, green, orange, etc.)
-│   ├── fastfetch/
-│   │   ├── config.jsonc
-│   │   └── arrera-logo.txt
-│   ├── plymouth/
-│   │   ├── arrera.plymouth
-│   │   ├── arrera.script
-│   │   ├── logo.png
-│   │   ├── progress_bar.png
-│   │   └── progress_bg.png
-│   ├── gdm/
-│   │   ├── 99-arrera-login
-│   │   ├── 99_arrera-branding.gschema.override
-│   │   └── profile-gdm
-│   ├── release/
-│   │   ├── os-release
-│   │   └── arrera-release
+├── common/                            # 🔄 Composants partagés (zéro duplication)
+│   ├── pixmaps/                       # Logos Arrera (PNG/SVG) et bannières de couleur
+│   ├── fastfetch/                     # Configuration Fastfetch & logo ASCII
+│   ├── plymouth/                      # Thème splash boot Arrera
+│   ├── gdm/                           # Configuration dconf & écran de login GDM
 │   ├── scripts/
-│   │   ├── 99-arrera-title.install
-│   │   └── arrera-branding-guard.sh
+│   │   ├── 99-arrera-title.install       # Hook dynamique de titre GRUB/BLS pour kernel-install
+│   │   └── arrera-branding-guard.sh      # Garde d'identité système après 'dnf upgrade'
 │   └── systemd/
 │       └── arrera-branding-guard.service
-├── arrera-branding.spec
-├── build.sh
+├── editions/                          # 🎯 Identités propres à chaque édition
+│   ├── home/
+│   │   ├── os-release
+│   │   └── arrera-release
+│   ├── education/
+│   │   ├── os-release
+│   │   └── arrera-release
+│   ├── enterprise/
+│   │   ├── os-release
+│   │   └── arrera-release
+│   └── server/                        # (Pas de Plymouth au packaging)
+│       ├── os-release
+│       └── arrera-release
+├── rpm/                               # Spécifications RPM par édition
+│   ├── arrera-branding-home.spec
+│   ├── arrera-branding-education.spec
+│   ├── arrera-branding-enterprise.spec
+│   └── arrera-branding-server.spec
+├── Makefile                           # Automatisation des tests et builds
+├── build.sh                           # Script de construction multi-éditions
 ├── LICENSE
 └── README.md
 ```
 
-## Construction du paquet RPM
+---
 
-Pour compiler le paquet RPM et SRPM :
+## 🚀 Construction des paquets RPM
+
+Le script `build.sh` permet de compiler l'ensemble des 4 RPMs ou une édition en particulier :
+
+### 1. Compiler les 4 éditions en une seule commande
 
 ```bash
 ./build.sh
 ```
 
-Les paquets `.rpm` générés seront placés dans le dossier `output/`.
+Cette commande génère dans le dossier `output/` :
+- `arrera-branding-home-*.noarch.rpm` & `*.src.rpm`
+- `arrera-branding-education-*.noarch.rpm` & `*.src.rpm`
+- `arrera-branding-enterprise-*.noarch.rpm` & `*.src.rpm`
+- `arrera-branding-server-*.noarch.rpm` & `*.src.rpm`
+
+### 2. Options de construction
+
+```bash
+# Compiler uniquement l'édition Serveur :
+./build.sh --edition server
+
+# Compiler uniquement l'édition Home :
+./build.sh --edition home
+
+# Générer uniquement les paquets sources (SRPM) pour Fedora COPR :
+./build.sh --srpm
+
+# Nettoyer les répertoires temporaires :
+./build.sh --clean
+```
+
+---
+
+## 📦 Installation sur un système Arrera
+
+Chaque RPM est autonome et embarque à la fois les assets visuels partagés et sa configuration d'édition :
+
+```bash
+# Pour une station Home :
+sudo dnf install -y output/arrera-branding-home-*.noarch.rpm
+
+# Pour un serveur :
+sudo dnf install -y output/arrera-branding-server-*.noarch.rpm
+```
